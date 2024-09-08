@@ -6,7 +6,7 @@ def calculate_metrics(df):
 
     
     # 2. Número de Sanções por Categoria e Ano
-    df_num_sancoes_categoria = df.groupBy(f.year("DATA_INICIO_SANCAO").alias("ano"), "CATEGORIA_DA_SANCAO") \
+    df_num_sancoes_categoria = df.groupBy(f.year("DATA_INICIO_SANCAO").alias("ano"), f.col("CATEGORIA_DA_SANCAO").alias("SANCAO")) \
                                  .agg(f.count("*").alias("numero_sancoes"))
     
     # 3. Tempo Médio de Duração das Sanções por Ano e Categoria
@@ -16,7 +16,7 @@ def calculate_metrics(df):
                                            .agg(f.avg("duracao_sancao").alias("tempo_medio_duracao_sancao"))
     
     # 4. Número de Sanções por Órgão Sancionador e Ano
-    df_num_sancoes_orgao = df.groupBy(f.year("DATA_INICIO_SANCAO").alias("ano"), "ORGAO_SANCIONADOR") \
+    df_num_sancoes_orgao = df.groupBy(f.year("DATA_INICIO_SANCAO").alias("ano"), f.col("ORGAO_SANCIONADOR").alias("org_sancionador")) \
                              .agg(f.count("*").alias("numero_sancoes_orgao"))
     
     # 5. Total de Empresas Sancionadas por Ano
@@ -27,8 +27,9 @@ def calculate_metrics(df):
     df_metrics = df_valor_multa.join(df_num_empresas_sancionadas, "ano", "outer")
     
     # Junte com df_num_sancoes_categoria e df_tempo_medio_duracao, que compartilham "ano" e "CATEGORIA_DA_SANCAO"
-    df_metrics = df_metrics.join(df_num_sancoes_categoria, ["ano"], "outer") \
-                           .join(df_tempo_medio_duracao, ["ano", "CATEGORIA_DA_SANCAO"], "outer")
+    df_metrics = (df_metrics.join(df_num_sancoes_categoria, ["ano"], "outer") 
+                           .join(df_tempo_medio_duracao.alias("medio"), ["ano", "CATEGORIA_DA_SANCAO"], "outer") 
+                            .drop(f.col("medio.CATEGORIA_DA_SANCAO")))
     
     # Junte com df_num_sancoes_orgao usando "ano" e "ORGAO_SANCIONADOR"
     df_metrics = df_metrics.join(df_num_sancoes_orgao, ["ano"], "outer").distinct()

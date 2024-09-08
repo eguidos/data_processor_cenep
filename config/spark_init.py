@@ -9,7 +9,7 @@ def get_credentials(profile_name):
     return credentials
 
 def init_spark_session(app_name="CNEP_Metrics"):
-    credentials = get_credentials("default")
+    credentials = get_credentials("dataeanalytics")
     conf = (
         SparkConf()
         .setAppName(app_name)
